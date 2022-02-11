@@ -1,32 +1,38 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
-namespace Arquivei\LaravelPrometheusExporter;
+namespace Saschahemleb\LaravelPrometheusExporter;
 
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\Adapter;
+use Saschahemleb\LaravelPrometheusExporter\Http\Controllers\MetricsController;
+use Saschahemleb\LaravelPrometheusExporter\Listeners\ObserveDbQueryTime;
 
 class PrometheusServiceProvider extends ServiceProvider
 {
     /**
      * Perform post-registration booting of services.
      */
-    public function boot() : void
+    public function boot(): void
     {
-        $this->publishes([
-            __DIR__ . '/../config/prometheus.php' => $this->configPath('prometheus.php'),
-        ]);
-        $this->loadRoutes();
+        $this->registerRoutes();
+        $this->registerEvents();
+
+        if ($this->app->runningInConsole()) {
+            $this->bootForConsole();
+        }
     }
 
     /**
-     * Register bindings in the container.
+     * Register any package services.
      */
-    public function register() : void
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/prometheus.php', 'prometheus');
 
@@ -42,8 +48,8 @@ class PrometheusServiceProvider extends ServiceProvider
         });
         $this->app->alias(PrometheusExporter::class, 'prometheus');
 
-        $this->app->bind('prometheus.storage_adapter_factory', function () {
-            return new StorageAdapterFactory();
+        $this->app->bind('prometheus.storage_adapter_factory', function ($app) {
+            return new StorageAdapterFactory($app['redis']);
         });
 
         $this->app->bind(Adapter::class, function ($app) {
@@ -56,50 +62,59 @@ class PrometheusServiceProvider extends ServiceProvider
             return $factory->make($driver, $config);
         });
         $this->app->alias(Adapter::class, 'prometheus.storage_adapter');
+
+        $this->app->singleton('prometheus.sql.histogram', function ($app) {
+            return $app['prometheus']->getOrRegisterHistogram(
+                'sql_query_duration',
+                'SQL query duration histogram',
+                array_values(array_filter([
+                    'query',
+                    'query_type'
+                ])),
+                config('prometheus.sql_buckets') ?? null
+            );
+        });
+
+        $this->app->bind(ObserveDbQueryTime::class, function ($app) {
+            return new ObserveDbQueryTime(
+                $app['prometheus.sql.histogram'],
+                config('prometheus.collect_full_sql_query')
+            );
+        });
     }
 
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides() : array
-    {
-        return [
-            'prometheus',
-            'prometheus.storage_adapter',
-            'prometheus.storage_adapter_factory',
-        ];
-    }
-
-    private function loadRoutes()
+    protected function registerRoutes()
     {
         if (!config('prometheus.metrics_route_enabled')) {
             return;
         }
 
-        $router = $this->app['router'];
-
-        /** @var Route $route */
-        $isLumen = mb_strpos($this->app->version(), 'Lumen') !== false;
-        if ($isLumen) {
-            $router->get(
+        Route::group([
+            'namespace' => 'Saschahemleb\LaravelPrometheusExporter\Http\Controllers',
+            'middleware' => config('prometheus.metrics_route_middleware', 'web'),
+            'name' => 'prometheus.'
+        ], function () {
+            Route::get(
                 config('prometheus.metrics_route_path'),
-                [
-                    'as' => 'metrics',
-                    'uses' => MetricsController::class . '@getMetrics',
-                ]
+                [MetricsController::class, 'getMetrics']
             );
-        } else {
-            $router->get(
-                config('prometheus.metrics_route_path'),
-                MetricsController::class . '@getMetrics'
-            )->name('metrics');
-        }
+        });
     }
 
-    private function configPath($path) : string
+    protected function registerEvents()
     {
-        return $this->app->basePath() . ($path ? DIRECTORY_SEPARATOR . $path : '');
+        $events = $this->app->make(Dispatcher::class);
+
+        $events->listen(QueryExecuted::class, ObserveDbQueryTime::class);
+    }
+
+    /**
+     * Console-specific booting.
+     */
+    protected function bootForConsole(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../config/prometheus.php' => config_path('prometheus.php'),
+        ]);
     }
 }

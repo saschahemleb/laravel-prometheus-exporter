@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter;
+namespace Saschahemleb\LaravelPrometheusExporter;
 
 use InvalidArgumentException;
 use Prometheus\CollectorRegistry;
@@ -10,6 +10,7 @@ use Prometheus\Counter;
 use Prometheus\Gauge;
 use Prometheus\Histogram;
 use Prometheus\MetricFamilySamples;
+use Saschahemleb\LaravelPrometheusExporter\Contracts\CollectorInterface;
 
 class PrometheusExporter
 {

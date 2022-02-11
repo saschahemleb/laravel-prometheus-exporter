@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter;
+namespace Saschahemleb\LaravelPrometheusExporter;
 
 use Illuminate\Support\Facades\Facade;
 

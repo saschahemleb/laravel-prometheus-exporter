@@ -2,17 +2,20 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter\Tests;
+namespace Saschahemleb\LaravelPrometheusExporter\Tests;
 
+use Illuminate\Redis\Connections\Connection;
+use Illuminate\Redis\RedisManager;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
+use Mockery\MockInterface;
+use Orchestra\Testbench\TestCase;
 use Prometheus\Storage\APC;
 use Prometheus\Storage\InMemory;
 use Prometheus\Storage\Redis;
-use Arquivei\LaravelPrometheusExporter\StorageAdapterFactory;
+use Saschahemleb\LaravelPrometheusExporter\StorageAdapterFactory;
 
 /**
- * @covers \Arquivei\LaravelPrometheusExporter\StorageAdapterFactory<extended>
+ * @covers \Saschahemleb\LaravelPrometheusExporter\StorageAdapterFactory<extended>
  */
 class StorageAdapterFactoryTest extends TestCase
 {
@@ -24,7 +27,24 @@ class StorageAdapterFactoryTest extends TestCase
     public function setUp() : void
     {
         parent::setUp();
-        $this->factory = new StorageAdapterFactory();
+
+        $this->instance(
+            RedisManager::class,
+            \Mockery::mock(RedisManager::class, function (MockInterface $mock) {
+                $connection = \Mockery::mock(Connection::class, function (MockInterface $mock) {
+                    $redis = \Mockery::mock(\Redis::class, function (MockInterface $mock) {
+                        $mock->shouldReceive('isConnected')->andReturn(true);
+                    });
+                    $mock->shouldReceive('client')->andReturn($redis);
+                });
+
+                $mock->shouldReceive('connection')
+                    ->with('special')
+                    ->andReturn($connection);
+            })
+        );
+
+        $this->factory = app(StorageAdapterFactory::class);
     }
 
     public function testMakeMemoryAdapter() : void
@@ -41,7 +61,7 @@ class StorageAdapterFactoryTest extends TestCase
 
     public function testMakeRedisAdapter() : void
     {
-        $adapter = $this->factory->make('redis');
+        $adapter = $this->factory->make('redis', ['connection' => 'special', 'prefix' => 'app_']);
         $this->assertInstanceOf(Redis::class, $adapter);
     }
 

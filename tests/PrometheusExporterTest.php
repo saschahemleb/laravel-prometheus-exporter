@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter\Tests;
+namespace Saschahemleb\LaravelPrometheusExporter\Tests;
 
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -10,8 +10,8 @@ use Prometheus\CollectorRegistry;
 use Prometheus\Counter;
 use Prometheus\Gauge;
 use Prometheus\Histogram;
-use Arquivei\LaravelPrometheusExporter\CollectorInterface;
-use Arquivei\LaravelPrometheusExporter\PrometheusExporter;
+use Saschahemleb\LaravelPrometheusExporter\Contracts\CollectorInterface;
+use Saschahemleb\LaravelPrometheusExporter\PrometheusExporter;
 
 class PrometheusExporterTest extends TestCase
 {

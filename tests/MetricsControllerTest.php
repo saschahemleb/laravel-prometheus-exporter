@@ -2,18 +2,18 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter\Tests;
+namespace Saschahemleb\LaravelPrometheusExporter\Tests;
 
-use Illuminate\Routing\ResponseFactory;
 use Illuminate\Http\Response;
+use Illuminate\Routing\ResponseFactory;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Prometheus\RenderTextFormat;
-use Arquivei\LaravelPrometheusExporter\MetricsController;
-use Arquivei\LaravelPrometheusExporter\PrometheusExporter;
+use Saschahemleb\LaravelPrometheusExporter\Http\Controllers\MetricsController;
+use Saschahemleb\LaravelPrometheusExporter\PrometheusExporter;
 
 /**
- * @covers \Arquivei\LaravelPrometheusExporter\MetricsController<extended>
+ * @covers \Saschahemleb\LaravelPrometheusExporter\Http\Controllers\MetricsController<extended>
  */
 class MetricsControllerTest extends TestCase
 {

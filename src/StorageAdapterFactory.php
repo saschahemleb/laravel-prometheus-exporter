@@ -2,8 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Arquivei\LaravelPrometheusExporter;
+namespace Saschahemleb\LaravelPrometheusExporter;
 
+use Illuminate\Redis\RedisManager;
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Prometheus\Storage\Adapter;
 use Prometheus\Storage\APC;
@@ -12,11 +14,11 @@ use Prometheus\Storage\Redis;
 
 class StorageAdapterFactory
 {
-    private $hostname;
+    private $redisManager;
 
-    public function __construct()
+    public function __construct(RedisManager $redisManager)
     {
-        $this->hostname = gethostname() ?? '';
+        $this->redisManager = $redisManager;
     }
 
     /**
@@ -51,10 +53,11 @@ class StorageAdapterFactory
     protected function makeRedisAdapter(array $config) : Redis
     {
         if (isset($config['prefix'])) {
-            $prefix = !empty($config['prefix_dynamic']) ? sprintf('%s_%s_', $config['prefix'], $this->hostname) : $config['prefix'];
-            Redis::setPrefix($prefix);
+            Redis::setPrefix($config['prefix']);
         }
 
-        return new Redis($config);
+        $connection = Arr::get($config, 'connection');
+
+        return Redis::fromExistingConnection($this->redisManager->connection($connection)->client());
     }
 }

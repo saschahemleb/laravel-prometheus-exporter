@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Arquivei\LaravelPrometheusExporter\Tests\Fixture;
+namespace Saschahemleb\LaravelPrometheusExporter\Tests\Fixture;
 
 use Prometheus\MetricFamilySamples;
 
