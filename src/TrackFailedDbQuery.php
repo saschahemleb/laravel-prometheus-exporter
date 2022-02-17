@@ -2,22 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Saschahemleb\LaravelPrometheusExporter\Listeners;
+namespace Saschahemleb\LaravelPrometheusExporter;
 
 use Illuminate\Database\Events\QueryExecuted;
-use Prometheus\Histogram;
-use Saschahemleb\LaravelPrometheusExporter\CleansDbQueries;
+use Prometheus\Counter;
 
-class ObserveDbQueryTime
+class TrackFailedDbQuery
 {
     use CleansDbQueries;
 
-    private $histogram;
+    private $counter;
     private $collectFullSqlQuery;
 
-    public function __construct(Histogram $histogram, bool $collectFullSqlQuery)
+    public function __construct(Counter $counter, bool $collectFullSqlQuery)
     {
-        $this->histogram = $histogram;
+        $this->counter = $counter;
         $this->collectFullSqlQuery = $collectFullSqlQuery;
     }
 
@@ -32,6 +31,6 @@ class ObserveDbQueryTime
             $type
         ]));
 
-        $this->histogram->observe($query->time, $labels);
+        $this->counter->inc($labels);
     }
 }

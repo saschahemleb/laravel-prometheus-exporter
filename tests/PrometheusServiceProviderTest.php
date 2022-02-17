@@ -4,8 +4,12 @@ declare(strict_types = 1);
 
 namespace Saschahemleb\LaravelPrometheusExporter\Tests;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase;
+use Prometheus\Counter;
 use Prometheus\Histogram;
 use Prometheus\Storage\Adapter;
 use Saschahemleb\LaravelPrometheusExporter\PrometheusExporter;
@@ -87,6 +91,32 @@ class PrometheusServiceProviderTest extends TestCase
         );
     }
 
+    public function testSqlFailedCounter()
+    {
+        /** @var ExceptionHandler $handler */
+        $handler = $this->app->make(ExceptionHandler::class);
+        try {
+            DB::table('invalid table name')->first();
+        } catch (QueryException $exception) {
+            $handler->report($exception);
+        }
+
+        $counter = $this->app->get('prometheus.sql_failed.counter');
+        $this->assertInstanceOf(Counter::class, $counter);
+        $this->assertSame(['query', 'query_type'], $counter->getLabelNames());
+
+        /* @var PrometheusExporter $prometheus */
+        $prometheus = $this->app->get('prometheus');
+        $export = $prometheus->export();
+        $this->assertContainsSamplesMatching(
+            $export,
+            MetricSamplesSpec::create()
+                ->withLabelNames(['query', 'query_type']),
+            1,
+            'Expected prometheus export to contain `sql_failed_query_count{query,query_type}`',
+        );
+    }
+
     protected function createTestTable()
     {
         $this->createdTable = false;
@@ -117,9 +147,9 @@ class PrometheusServiceProviderTest extends TestCase
         ]);
     }
 
-    private function assertContainsSamplesMatching(array $samples, MetricSamplesSpec $spec, int $count = 1): void
+    private function assertContainsSamplesMatching(array $samples, MetricSamplesSpec $spec, int $count = 1, string $message = ''): void
     {
         $matched = array_filter($samples, [$spec, 'matches']);
-        $this->assertCount($count, $matched);
+        $this->assertCount($count, $matched, $message);
     }
 }
