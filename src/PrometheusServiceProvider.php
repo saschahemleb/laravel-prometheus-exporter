@@ -68,8 +68,8 @@ class PrometheusServiceProvider extends ServiceProvider
 
         $this->app->singleton('prometheus.sql.histogram', function ($app) {
             return $app['prometheus']->getOrRegisterHistogram(
-                'sql_query_duration',
-                'SQL query duration histogram',
+                'sql_query_duration_seconds',
+                'SQL query duration histogram in seconds',
                 [
                     'query',
                     'query_type'

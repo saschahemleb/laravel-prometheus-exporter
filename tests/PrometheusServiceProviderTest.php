@@ -55,8 +55,8 @@ class PrometheusServiceProviderTest extends TestCase
         $histogram = $this->app->get('prometheus.sql.histogram');
         $this->assertInstanceOf(Histogram::class, $histogram);
         $this->assertSame(['query', 'query_type'], $histogram->getLabelNames());
-        $this->assertSame('app_sql_query_duration', $histogram->getName());
-        $this->assertSame('SQL query duration histogram', $histogram->getHelp());
+        $this->assertSame('app_sql_query_duration_seconds', $histogram->getName());
+        $this->assertSame('SQL query duration histogram in seconds', $histogram->getHelp());
 
         /* @var PrometheusExporter $prometheus */
         $prometheus = $this->app->get('prometheus');
@@ -65,9 +65,9 @@ class PrometheusServiceProviderTest extends TestCase
         $this->assertContainsSamplesMatching(
             $export,
             MetricSamplesSpec::create()
-                ->withName('app_sql_query_duration')
+                ->withName('app_sql_query_duration_seconds')
                 ->withLabelNames(['query', 'query_type'])
-                ->withHelp('SQL query duration histogram')
+                ->withHelp('SQL query duration histogram in seconds')
         );
     }
 

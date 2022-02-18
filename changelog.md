@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Changed
+ - `sql_query_duration` was renamed to `sql_query_duration_seconds` and its unit was changed from milliseconds to seconds
 
 ## [1.0.1] - 2022-02-11
 ### Added

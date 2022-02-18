@@ -32,6 +32,6 @@ class ObserveDbQueryTime
             $type
         ]));
 
-        $this->histogram->observe($query->time, $labels);
+        $this->histogram->observe($query->time / 1e3, $labels);
     }
 }
