@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\Adapter;
+use Saschahemleb\LaravelPrometheusExporter\Collectors\OpcodeCacheCollector;
 use Saschahemleb\LaravelPrometheusExporter\Http\Controllers\MetricsController;
 use Saschahemleb\LaravelPrometheusExporter\Listeners\ObserveDbQueryTime;
 
@@ -40,6 +41,9 @@ class PrometheusServiceProvider extends ServiceProvider
             $adapter = $app['prometheus.storage_adapter'];
             $prometheus = new CollectorRegistry($adapter, true);
             $exporter = new PrometheusExporter(config('prometheus.namespace'), $prometheus);
+
+            $exporter->registerCollector($this->app->make(OpcodeCacheCollector::class));
+
             foreach (config('prometheus.collectors') as $collectorClass) {
                 $collector = $this->app->make($collectorClass);
                 $exporter->registerCollector($collector);

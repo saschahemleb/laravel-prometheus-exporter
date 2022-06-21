@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+ - Add `OpcodeCacheCollector`, which exports metrics about PHPs opcode cache.
 
 ### Removed
- - Removed `sql_failed_query_count` metric again, because it's registration was not compatible with `nunomaduro/collision`
+ - Remove `sql_failed_query_count` metric again, because it's registration was not compatible with `nunomaduro/collision`
 
 ### Changed
 
