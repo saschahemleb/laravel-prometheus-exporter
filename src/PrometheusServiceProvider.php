@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Saschahemleb\LaravelPrometheusExporter;
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Prometheus\CollectorRegistry;
@@ -82,29 +79,6 @@ class PrometheusServiceProvider extends ServiceProvider
             return new ObserveDbQueryTime(
                 $app['prometheus.sql.histogram'],
                 config('prometheus.collect_full_sql_query')
-            );
-        });
-
-        $this->app->singleton('prometheus.sql_failed.counter', function ($app) {
-            return $app['prometheus']->getOrRegisterCounter(
-                'sql_failed_query_count',
-                'SQL failed query count',
-                [
-                    'query',
-                    'query_type'
-                ]
-            );
-        });
-        $this->app->singleton('prometheus.sql_failed.tracker', function ($app) {
-            return new TrackFailedDbQuery(
-                $app['prometheus.sql_failed.counter'],
-                config('prometheus.collect_full_sql_query')
-            );
-        });
-
-        $this->app->make(ExceptionHandler::class)->reportable(function (QueryException $e) {
-            $this->app['prometheus.sql_failed.tracker']->handle(
-                new QueryExecuted($e->getSql(), $e->getBindings(), null, DB::connection(config('database.default')))
             );
         });
     }
