@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Removed
+
+### Changed
+
+## [1.0.2] - 2022-06-21
+### Added
  - Add `sql_failed_query_count` metric, counting how many QueryExceptions were thrown
 
 ### Removed
@@ -35,5 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-[Unreleased]: https://github.com/saschahemleb/laravel-prometheus-exporter/compare/v1.0.1...main
+[Unreleased]: https://github.com/saschahemleb/laravel-prometheus-exporter/compare/v1.0.2...main
+[1.0.2]: https://github.com/saschahemleb/laravel-prometheus-exporter/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/saschahemleb/laravel-prometheus-exporter/compare/v1.0.0...v1.0.1
